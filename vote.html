@@ -7,32 +7,71 @@
 
 <!-- Bootstrap -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<!-- Font Awesome -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
 <style>
-  body { background: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-  .page-header { margin-bottom: 25px; }
-  .card { border-radius: 15px; transition: 0.3s; }
-  .card:hover { transform: translateY(-5px); box-shadow: 0 8px 18px rgba(0,0,0,0.15); }
-  .candidate-img {
-    width: 180px;
-    height: 180px;
-    object-fit: cover;
-    border-radius: 50%;
-    margin: 15px auto 10px auto;
-    display: block;
-    border: 4px solid #f1f1f1;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  }
-  #countdown { font-weight: bold; color: #0069d9; margin-top: 10px; }
+/* Body and Background */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(to right, #1c3c72, #2a5298);
+  min-height: 100vh;
+  color: #fff;
+}
+
+/* Page Header */
+.page-header h3 { font-weight: bold; }
+.page-header p { margin-bottom: 0.5rem; }
+
+/* Candidate Cards */
+.card {
+  border-radius: 15px;
+  transition: 0.3s;
+  background: rgba(255,255,255,0.95);
+  color: #333;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+.candidate-img {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin: 10px auto;
+  display: block;
+  border: 4px solid #f1f1f1;
+}
+
+/* Countdown */
+#countdown {
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #ffc107;
+  margin-top: 10px;
+}
+
+/* Buttons */
+.btn-primary { background-color: #0069d9; border: none; }
+.btn-primary:hover { background-color: #0056b3; }
+
+/* Alerts */
+.alert { font-weight: 500; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .candidate-img { width: 120px; height: 120px; }
+}
+@media (max-width: 576px) {
+  .candidate-img { width: 100px; height: 100px; }
+}
 </style>
 </head>
 <body>
 <div class="container py-5">
-  <div class="page-header text-center">
+  <div class="page-header text-center mb-4">
     <h3><i class="fas fa-vote-yea me-2"></i> Vote for Your Candidates</h3>
-    <p class="text-muted">Select your preferred candidate for each position (or skip)</p>
+    <p class="text-light">Select your preferred candidate for each position (or skip)</p>
     <p id="countdown"></p>
   </div>
 
@@ -45,9 +84,9 @@
 
   <div id="voteStatusBox" class="mt-4 text-center"></div>
 
-  <div class="d-flex justify-content-center gap-2 mt-4">
+  <div class="d-flex justify-content-center gap-2 mt-4 flex-wrap">
     <a href="results.html" class="btn btn-success"><i class="fas fa-chart-bar"></i> View Results</a>
-    <button id="logoutBtn" class="btn btn-outline-secondary"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    <button id="logoutBtn" class="btn btn-outline-light"><i class="fas fa-sign-out-alt"></i> Logout</button>
   </div>
 </div>
 
@@ -58,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const voteStatusBox = document.getElementById("voteStatusBox");
   const countdownEl = document.getElementById("countdown");
   const logoutBtn = document.getElementById("logoutBtn");
-  const placeholderImg = "https://via.placeholder.com/180?text=No+Image";
+  const placeholderImg = "https://via.placeholder.com/140?text=No+Image";
 
   let candidates = JSON.parse(localStorage.getItem("candidates")) || [];
   let positions = [...new Set(candidates.map(c => c.position))];
@@ -73,10 +112,10 @@ document.addEventListener("DOMContentLoaded", () => {
       group.forEach((cand, idx) => {
         const imgSrc = cand.image || placeholderImg;
         html += `
-          <div class="col-md-4">
+          <div class="col-md-4 col-sm-6">
             <div class="card shadow-sm text-center p-3">
               <img src="${imgSrc}" class="candidate-img" alt="Profile">
-              <h5 class="card-title">${cand.name}</h5>
+              <h5 class="card-title mt-2">${cand.name}</h5>
               <div class="form-check mt-2">
                 <input class="form-check-input" type="radio" name="${cand.position}" value="${cand.name}" id="${cand.position}-${idx}">
                 <label class="form-check-label" for="${cand.position}-${idx}">Select</label>
@@ -88,9 +127,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // "No Vote / Skip" option
       html += `
-        <div class="col-md-4">
+        <div class="col-md-4 col-sm-6">
           <div class="card shadow-sm text-center p-3">
-            <h5 class="card-title">No Vote / Skip</h5>
+            <h5 class="card-title mt-2">No Vote / Skip</h5>
             <div class="form-check mt-2">
               <input class="form-check-input" type="radio" name="${pos}" value="" id="${pos}-skip">
               <label class="form-check-label" for="${pos}-skip">Skip</label>
@@ -98,12 +137,13 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
       `;
+
       html += `</div></div>`;
       candidatesList.innerHTML += html;
     });
   }
 
-  // Voting schedule check (auto reacts to admin stop/extend)
+  // Voting schedule
   function checkVotingSchedule() {
     function updateCountdown() {
       const schedule = JSON.parse(localStorage.getItem("votingSchedule"));
@@ -129,9 +169,8 @@ document.addEventListener("DOMContentLoaded", () => {
         voteForm.querySelector("button[type='submit']").disabled = true;
       }
     }
-
     updateCountdown();
-    setInterval(updateCountdown, 1000); // Keep checking for admin updates
+    setInterval(updateCountdown, 1000);
   }
 
   function formatTime(ms) {
@@ -142,7 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${d}d ${h}h ${m}m ${s}s`;
   }
 
-  // Voting form submission
+  // Submit vote
   voteForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const schedule = JSON.parse(localStorage.getItem("votingSchedule"));
@@ -191,7 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   renderCandidates();
-  checkVotingSchedule(); // Auto reacts to schedule changes
+  checkVotingSchedule();
 });
 </script>
 </body>
