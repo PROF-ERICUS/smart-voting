@@ -10,30 +10,94 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
 <style>
-  body { background: #f4f6f9; font-family: 'Segoe UI', sans-serif; }
-  .card { border-radius: 15px; padding: 20px; text-align: center; transition: 0.3s; }
-  .status-upcoming { background: #cce5ff; color: #004085; }
-  .status-ongoing { background: #d4edda; color: #155724; }
-  .status-ended { background: #f8d7da; color: #721c24; }
-  #countdown { font-size: 1.2rem; font-weight: bold; margin-top: 10px; }
+/* Background & Body */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(to right, #1c3c72, #2a5298);
+  min-height: 100vh;
+  color: #333;
+}
 
-  .live-voting-card { margin-top: 30px; }
-  .candidate-box { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-radius: 12px; background: #f8f9fa; margin-bottom: 10px; }
-  .candidate-info { display: flex; align-items: center; gap: 10px; }
-  .candidate-info img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd; }
-  .progress { height: 12px; border-radius: 10px; flex:1; margin-left: 15px; }
-  .stats-card { margin-top: 20px; }
+/* Cards */
+.card {
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  transition: 0.3s;
+  background: #fff;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+/* Voting Status */
+.status-upcoming { background: #cce5ff; color: #004085; }
+.status-ongoing { background: #d4edda; color: #155724; }
+.status-ended { background: #f8d7da; color: #721c24; }
+#countdown { font-size: 1.2rem; font-weight: bold; margin-top: 10px; }
+
+/* Stats Cards */
+.stats-card .card {
+  text-align: center;
+}
+.stats-card .card i { font-size: 2rem; margin-bottom: 10px; }
+
+/* Live Voting */
+.live-voting-card { margin-top: 30px; color: #fff; }
+.candidate-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.15);
+  margin-bottom: 10px;
+}
+.candidate-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.candidate-info img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+}
+.progress {
+  height: 12px;
+  border-radius: 10px;
+  flex:1;
+  margin-left: 15px;
+  background: rgba(255,255,255,0.3);
+}
+.progress-bar {
+  background-color: #ffc107;
+  transition: width 0.5s;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .candidate-info img { width: 40px; height: 40px; }
+  .stats-card .card i { font-size: 1.5rem; }
+}
+@media (max-width: 576px) {
+  .candidate-info { flex-direction: column; align-items: flex-start; }
+  .progress { margin-left: 0; margin-top: 5px; width: 100%; }
+}
 </style>
 </head>
 <body>
 <div class="container py-5">
-  <div class="d-flex justify-content-between mb-4">
-    <a href="candidates.html" class="btn btn-outline-primary"><i class="fas fa-users-cog"></i> Manage Candidates</a>
-     <a href="registerd -voters.html" class="btn btn-outline-primary"><i class="fas fa-users-cog"></i> registered_voters</a>
+  <div class="d-flex flex-wrap justify-content-between mb-4 gap-2">
+    <a href="candidates.html" class="btn btn-outline-light"><i class="fas fa-users-cog"></i> Manage Candidates</a>
+    <a href="registered-voters.html" class="btn btn-outline-light"><i class="fas fa-users"></i> Registered Voters</a>
     <button class="btn btn-outline-danger" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
   </div>
 
-  <h3 class="mb-4 text-center"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h3>
+  <h3 class="mb-4 text-center text-white"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h3>
 
   <!-- Voting Schedule Cards -->
   <div class="row g-4">
@@ -61,31 +125,31 @@
   </div>
 
   <!-- Dashboard Stats -->
-  <div class="row g-3 stats-card">
-    <div class="col-md-3">
+  <div class="row g-3 stats-card mt-4">
+    <div class="col-md-3 col-6">
       <div class="card shadow-sm">
-        <i class="fas fa-users fa-2x text-primary mb-2"></i>
+        <i class="fas fa-users text-primary"></i>
         <h4 id="totalVoters">0</h4>
         <small>Total Registered</small>
       </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-3 col-6">
       <div class="card shadow-sm">
-        <i class="fas fa-vote-yea fa-2x text-success mb-2"></i>
+        <i class="fas fa-vote-yea text-success"></i>
         <h4 id="totalCast">0</h4>
         <small>Votes Cast</small>
       </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-3 col-6">
       <div class="card shadow-sm">
-        <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
+        <i class="fas fa-times-circle text-danger"></i>
         <h4 id="rejectedVotes">0</h4>
         <small>Rejected</small>
       </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-3 col-6">
       <div class="card shadow-sm">
-        <i class="fas fa-percentage fa-2x text-warning mb-2"></i>
+        <i class="fas fa-percentage text-warning"></i>
         <h4 id="turnout">0%</h4>
         <small>Turnout</small>
       </div>
@@ -93,8 +157,8 @@
   </div>
 
   <!-- Live Voting Panel -->
-  <div class="live-voting-card">
-    <h4 class="mt-4"><i class="fas fa-chart-bar me-2"></i> Live Voting Counts</h4>
+  <div class="live-voting-card mt-4">
+    <h4 class="text-white"><i class="fas fa-chart-bar me-2"></i> Live Voting Counts</h4>
     <div id="liveVotesContainer"></div>
   </div>
 </div>
@@ -110,29 +174,42 @@ document.addEventListener("DOMContentLoaded", () => {
   const rejectedVotesEl = document.getElementById("rejectedVotes");
   const turnoutEl = document.getElementById("turnout");
 
+  const startDateEl = document.getElementById("startDate");
+  const startTimeEl = document.getElementById("startTime");
+  const endDateEl = document.getElementById("endDate");
+  const endTimeEl = document.getElementById("endTime");
+  const statusEl = document.getElementById("votingStatus");
+  const countdownEl = document.getElementById("countdown");
+  const statusCard = document.getElementById("statusCard");
+
   if (!schedule) {
-    document.getElementById("startDate").textContent = "Not Set";
-    document.getElementById("endDate").textContent = "Not Set";
-    document.getElementById("votingStatus").textContent = "No Schedule";
-    document.getElementById("countdown").textContent = "";
-    liveVotesContainer.innerHTML = "<p class='text-muted'>No live voting available.</p>";
+    startDateEl.textContent = "Not Set";
+    endDateEl.textContent = "Not Set";
+    statusEl.textContent = "No Schedule";
+    countdownEl.textContent = "";
+    liveVotesContainer.innerHTML = "<p class='text-white'>No live voting available.</p>";
     return;
   }
 
   const start = new Date(schedule.start);
   const end = new Date(schedule.end);
 
-  document.getElementById("startDate").textContent = start.toDateString();
-  document.getElementById("startTime").textContent = start.toLocaleTimeString();
-  document.getElementById("endDate").textContent = end.toDateString();
-  document.getElementById("endTime").textContent = end.toLocaleTimeString();
+  startDateEl.textContent = start.toDateString();
+  startTimeEl.textContent = start.toLocaleTimeString();
+  endDateEl.textContent = end.toDateString();
+  endTimeEl.textContent = end.toLocaleTimeString();
+
+  function formatTime(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const days = Math.floor(totalSeconds / (3600*24));
+    const hours = Math.floor((totalSeconds % (3600*24)) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  }
 
   function updateStatus() {
     const now = new Date();
-    const statusCard = document.getElementById("statusCard");
-    const countdownEl = document.getElementById("countdown");
-    const statusEl = document.getElementById("votingStatus");
-
     statusCard.className = "card shadow-sm";
 
     if (now < start) {
@@ -148,15 +225,6 @@ document.addEventListener("DOMContentLoaded", () => {
       statusCard.classList.add("status-ended");
       countdownEl.textContent = "Voting period has ended.";
     }
-  }
-
-  function formatTime(ms) {
-    const totalSeconds = Math.floor(ms / 1000);
-    const days = Math.floor(totalSeconds / (3600*24));
-    const hours = Math.floor((totalSeconds % (3600*24)) / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
   }
 
   function renderLiveVotes() {
@@ -182,28 +250,28 @@ document.addEventListener("DOMContentLoaded", () => {
       const group = candidates.filter(c => c.position === pos);
       if (!group.length) return;
 
-      let votesForPosition = votesList.map(v => v.ballot[pos]).filter(Boolean);
-      let totalVotes = votesForPosition.length;
+      const votesForPosition = votesList.map(v => v.ballot[pos]).filter(Boolean);
+      const totalVotes = votesForPosition.length;
 
-      let html = `<h5 class="mt-3">${pos}</h5>`;
+      let html = `<h5 class="mt-3 text-white">${pos}</h5>`;
       group.forEach(cand => {
-        let candVotes = votesForPosition.filter(v => v === cand.name).length;
-        let percentage = totalVotes > 0 ? ((candVotes / totalVotes) * 100).toFixed(1) : 0;
+        const candVotes = votesForPosition.filter(v => v === cand.name).length;
+        const percentage = totalVotes > 0 ? ((candVotes / totalVotes) * 100).toFixed(1) : 0;
+        const img = cand.image || "https://via.placeholder.com/50";
 
         html += `
           <div class="candidate-box">
             <div class="candidate-info">
-              <img src="${cand.image}" alt="Profile">
+              <img src="${img}" alt="Profile">
               <strong>${cand.name}</strong>
             </div>
             <div class="progress">
-              <div class="progress-bar bg-primary" role="progressbar" style="width:${percentage}%"></div>
+              <div class="progress-bar" role="progressbar" style="width:${percentage}%"></div>
             </div>
-            <small class="ms-2">${candVotes} votes (${percentage}%)</small>
+            <small class="ms-2 text-white">${candVotes} votes (${percentage}%)</small>
           </div>
         `;
       });
-
       liveVotesContainer.innerHTML += html;
     });
   }
