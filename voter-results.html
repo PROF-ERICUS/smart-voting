@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SecureVote – Public Results</title>
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<style>
+  body { background: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  .stats-card { background: #fff; border-radius: 15px; padding: 20px; margin-bottom: 25px; box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+  .stat-box { text-align: center; padding: 15px; border-radius: 12px; background: #f8f9fa; }
+  .stat-box h4 { margin: 0; font-weight: bold; }
+  .result-card { border-radius: 15px; padding: 20px; margin-bottom: 20px; background: #fff; box-shadow: 0 6px 15px rgba(0,0,0,0.1); }
+  .candidate-box { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 12px; background: #f8f9fa; margin-bottom: 10px; }
+  .candidate-info { display: flex; align-items: center; gap: 12px; }
+  .candidate-info img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd; }
+  .progress { height: 12px; border-radius: 10px; }
+  .winner-badge { font-size: 0.8rem; background: #28a745; color: #fff; padding: 3px 8px; border-radius: 12px; margin-left: 8px; }
+  .no-vote { font-style: italic; color: #888; }
+  .not-released { text-align: center; font-size: 1.3rem; color: #dc3545; margin-top: 50px; }
+  .search-bar { margin-bottom: 20px; }
+  .action-buttons { margin-bottom: 20px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="container py-5">
+  <h3 class="mb-4 text-center"><i class="fas fa-chart-pie me-2"></i> Election Results</h3>
+
+  <!-- Stats Dashboard -->
+  <div id="statsBox" class="stats-card">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="stat-box">
+          <i class="fas fa-users fa-2x text-primary mb-2"></i>
+          <h4 id="totalVoters">0</h4>
+          <small>Total Registered</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-box">
+          <i class="fas fa-vote-yea fa-2x text-success mb-2"></i>
+          <h4 id="totalCast">0</h4>
+          <small>Votes Cast</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-box">
+          <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
+          <h4 id="rejectedVotes">0</h4>
+          <small>Rejected</small>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-box">
+          <i class="fas fa-percentage fa-2x text-warning mb-2"></i>
+          <h4 id="turnout">0%</h4>
+          <small>Turnout</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="search-bar">
+    <input type="text" id="searchInput" class="form-control" placeholder="Search by candidate name or position...">
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="action-buttons">
+    <button id="exportCsvBtn" class="btn btn-outline-dark"><i class="fas fa-file-csv"></i> Export CSV</button>
+    <button id="printResultsBtn" class="btn btn-primary"><i class="fas fa-print"></i> Print</button>
+  </div>
+
+  <!-- Results Container -->
+  <div id="resultsContainer"></div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const resultsContainer = document.getElementById("resultsContainer");
+  const totalVotersEl = document.getElementById("totalVoters");
+  const totalCastEl = document.getElementById("totalCast");
+  const rejectedVotesEl = document.getElementById("rejectedVotes");
+  const turnoutEl = document.getElementById("turnout");
+  const searchInput = document.getElementById("searchInput");
+  const placeholderImg = "https://via.placeholder.com/60?text=No+Image";
+
+  function renderResults(filter = "") {
+    const resultsReleased = localStorage.getItem("resultsReleased") === "true";
+    const candidates = JSON.parse(localStorage.getItem("candidates")) || [];
+    const positions = [...new Set(candidates.map(c => c.position))];
+    const votesData = JSON.parse(localStorage.getItem("votesList")) || [];
+    const registeredVoters = JSON.parse(localStorage.getItem("registeredVoters")) || [];
+
+    // --- Dashboard Stats ---
+    const totalVoters = registeredVoters.length;
+    const totalCast = votesData.length;
+    const rejectedVotes = votesData.filter(v => positions.some(pos => !v.ballot[pos])).length;
+    const turnout = totalVoters > 0 ? ((totalCast / totalVoters) * 100).toFixed(1) : 0;
+
+    totalVotersEl.textContent = totalVoters;
+    totalCastEl.textContent = totalCast;
+    rejectedVotesEl.textContent = rejectedVotes;
+    turnoutEl.textContent = turnout + "%";
+
+    resultsContainer.innerHTML = "";
+
+    if (!resultsReleased) {
+      resultsContainer.innerHTML = '<div class="not-released"><i class="fas fa-lock me-2"></i> Results are not yet released. Please check back later.</div>';
+      return;
+    }
+
+    // --- Render Candidate Results ---
+    positions.forEach(pos => {
+      const group = candidates.filter(c => 
+        c.position.toLowerCase().includes(filter.toLowerCase()) ||
+        c.name.toLowerCase().includes(filter.toLowerCase())
+      );
+      if (!group.length) return;
+
+      let votesForPosition = votesData.map(v => v.ballot[pos]).filter(Boolean);
+      let totalVotes = votesForPosition.length;
+
+      // Determine winner
+      let winner = null;
+      let maxVotes = -1;
+      group.forEach(cand => {
+        const candVotes = votesForPosition.filter(v => v === cand.name).length;
+        if (candVotes > maxVotes) {
+          maxVotes = candVotes;
+          winner = cand.name;
+        }
+      });
+
+      let html = `<div class="result-card"><h5><i class="fas fa-briefcase me-2"></i>${pos}</h5>`;
+      group.forEach(cand => {
+        const candVotes = votesForPosition.filter(v => v === cand.name).length;
+        const percentage = totalVotes > 0 ? ((candVotes / totalVotes) * 100).toFixed(1) : 0;
+        const isWinner = cand.name === winner;
+
+        html += `
+          <div class="candidate-box">
+            <div class="candidate-info">
+              <img src="${cand.image || placeholderImg}" alt="Profile">
+              <strong>${cand.name} ${isWinner ? '<span class="winner-badge"><i class="fas fa-trophy"></i> Winner</span>' : ''}</strong>
+            </div>
+            <div style="flex:1; margin-left:20px;">
+              <div class="progress mb-1">
+                <div class="progress-bar ${isWinner ? 'bg-success' : 'bg-primary'}" role="progressbar" style="width: ${percentage}%"></div>
+              </div>
+              <small>${candVotes} votes (${percentage}%)</small>
+            </div>
+          </div>`;
+      });
+
+      html += `</div>`;
+      resultsContainer.innerHTML += html;
+    });
+  }
+
+  // --- Search filter ---
+  searchInput.addEventListener("input", () => renderResults(searchInput.value.trim()));
+
+  // --- Auto-refresh every second for real-time updates ---
+  setInterval(() => renderResults(searchInput.value.trim()), 1000);
+
+  // Initial render
+  renderResults();
+});
+</script>
+
+</body>
+</html>

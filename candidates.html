@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SecureVote – Manage Candidates</title>
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<style>
+  body { background: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  .page-header { margin-bottom: 30px; }
+  .page-header h3 { font-weight: 600; color: #333; }
+  .card { border-radius: 15px; overflow: hidden; transition: 0.3s; text-align: center; }
+  .card:hover { transform: translateY(-5px); box-shadow: 0 8px 18px rgba(0,0,0,0.15); }
+  .form-section { background: #fff; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px; }
+  .btn-primary { background: #0069d9; border: none; }
+  .btn-primary:hover { background: #0056b3; }
+  .candidate-img { width: 160px; height: 160px; object-fit: cover; border-radius: 50%; margin: 20px auto 10px; display: block; border: 4px solid #f4f6f9; }
+  .position-header { margin-top: 40px; margin-bottom: 15px; font-weight: bold; color: #444; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+  .logout-btn { position: absolute; top: 20px; right: 20px; }
+  #countdown { font-weight: bold; margin-top: 5px; color: #0069d9; }
+</style>
+</head>
+<body>
+<div class="container py-5 position-relative">
+  <button class="btn btn-outline-danger logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+
+  <div class="page-header text-center">
+    <h3><i class="fas fa-users-cog me-2"></i> Candidate Management</h3>
+    <p class="text-muted">Add, edit, and organize election candidates by positions</p>
+  </div>
+
+  <!-- Candidate Form -->
+  <div class="form-section">
+    <h5 class="mb-3"><i class="fas fa-user-plus me-2"></i><span id="formTitle">Add New Candidate</span></h5>
+    <form id="addCandidateForm" class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Position</label>
+        <input type="text" id="candPosition" class="form-control" placeholder="e.g. President" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Full Name</label>
+        <input type="text" id="candName" class="form-control" placeholder="Candidate Name" required>
+      </div>
+      <div class="col-md-12">
+        <label class="form-label">Profile Image</label>
+        <input type="file" id="candImage" class="form-control" accept="image/*">
+      </div>
+      <div class="col-12 text-end">
+        <button type="submit" class="btn btn-primary px-4"><i class="fas fa-plus"></i> <span id="formBtnText">Add Candidate</span></button>
+        <button type="button" id="cancelEditBtn" class="btn btn-secondary px-4 d-none">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Voting Schedule -->
+  <div class="form-section">
+    <h5 class="mb-3"><i class="fas fa-calendar-alt me-2"></i>Voting Schedule</h5>
+    <form id="scheduleForm" class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Start Date & Time</label>
+        <input type="datetime-local" id="voteStart" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">End Date & Time</label>
+        <input type="datetime-local" id="voteEnd" class="form-control" required>
+      </div>
+      <div class="col-12 text-end">
+        <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save"></i> Save Schedule</button>
+        <button type="button" id="stopVotingBtn" class="btn btn-danger px-4 ms-2"><i class="fas fa-stop-circle"></i> Stop Voting Now</button>
+        <button type="button" id="extendVotingBtn" class="btn btn-warning px-4 ms-2"><i class="fas fa-clock"></i> Extend Voting</button>
+      </div>
+    </form>
+    <p class="mt-3 text-muted" id="currentSchedule">No voting schedule set.</p>
+    <p id="countdown"></p>
+    <a href="admin-dashboard.html" class="btn btn-outline-success mt-3"><i class="fas fa-tachometer-alt"></i> View Dashboard</a>
+     <a href="vote.html" class="btn btn-outline-success mt-3"><i class="fas fa-tachometer-alt"></i> View voting</a>
+  </div>
+
+  <!-- Candidate List -->
+  <div>
+    <h5 class="mb-3"><i class="fas fa-list me-2"></i>Candidate List</h5>
+    <div id="candidatesAdminList"></div>
+  </div>
+</div>
+
+<div class="toast-container position-fixed top-0 end-0 p-3"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function showToast(message, type = "success") {
+  const toastContainer = document.querySelector(".toast-container");
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <div class="toast align-items-center text-bg-${type} border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>`;
+  toastContainer.append(wrapper);
+  const toast = new bootstrap.Toast(wrapper.querySelector(".toast"));
+  toast.show();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const addForm = document.getElementById("addCandidateForm");
+  const candPosition = document.getElementById("candPosition");
+  const candName = document.getElementById("candName");
+  const candImage = document.getElementById("candImage");
+  const list = document.getElementById("candidatesAdminList");
+  const formTitle = document.getElementById("formTitle");
+  const formBtnText = document.getElementById("formBtnText");
+  const cancelEditBtn = document.getElementById("cancelEditBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  const voteStart = document.getElementById("voteStart");
+  const voteEnd = document.getElementById("voteEnd");
+  const scheduleForm = document.getElementById("scheduleForm");
+  const currentSchedule = document.getElementById("currentSchedule");
+  const countdownEl = document.getElementById("countdown");
+  const stopVotingBtn = document.getElementById("stopVotingBtn");
+  const extendVotingBtn = document.getElementById("extendVotingBtn");
+
+  const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+  if (!currentUser || currentUser.role !== "Admin") window.location.href = "index.html";
+
+  let candidates = JSON.parse(localStorage.getItem("candidates")) || [];
+  let editIndex = null;
+
+  function renderCandidates() {
+    list.innerHTML = "";
+    if (!candidates.length) return list.innerHTML = `<p class="text-muted">No candidates added yet.</p>`;
+    const positions = [...new Set(candidates.map(c => c.position))];
+    positions.forEach(pos => {
+      let section = `<div class="position-header"><i class="fas fa-briefcase me-1"></i> ${pos} <span class="badge bg-secondary">${candidates.filter(c => c.position===pos).length}</span></div><div class="row g-4">`;
+      candidates.filter(c => c.position===pos).forEach(cand => {
+        section += `
+          <div class="col-md-4">
+            <div class="card shadow-sm">
+              <img src="${cand.image}" class="candidate-img" alt="Profile Image">
+              <div class="card-body">
+                <h5 class="card-title">${cand.name}</h5>
+                <p class="card-text text-muted mb-2">${cand.position}</p>
+                <button class="btn btn-outline-primary btn-sm me-2" onclick="editCandidate(${candidates.indexOf(cand)})"><i class="fas fa-edit"></i> Edit</button>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteCandidate(${candidates.indexOf(cand)})"><i class="fas fa-trash"></i> Remove</button>
+              </div>
+            </div>
+          </div>`;
+      });
+      section += `</div>`;
+      list.innerHTML += section;
+    });
+  }
+
+  function resetForm() {
+    addForm.reset();
+    editIndex = null;
+    formTitle.textContent = "Add New Candidate";
+    formBtnText.textContent = "Add Candidate";
+    cancelEditBtn.classList.add("d-none");
+  }
+
+  addForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const file = candImage.files[0];
+    if (candidates.some(c => c.position.trim().toLowerCase()===candPosition.value.trim().toLowerCase() && c.name.trim().toLowerCase()===candName.value.trim().toLowerCase() && editIndex===null)) {
+      showToast("Candidate already exists for this position.", "danger");
+      return;
+    }
+    function saveCandidate(imgSrc) {
+      const candidateData = { position: candPosition.value.trim(), name: candName.value.trim(), image: imgSrc };
+      if (editIndex!==null) { candidates[editIndex]=candidateData; showToast("Candidate updated successfully."); }
+      else { candidates.push(candidateData); showToast("Candidate added successfully."); }
+      localStorage.setItem("candidates", JSON.stringify(candidates));
+      renderCandidates(); resetForm();
+    }
+    if (file) { const reader=new FileReader(); reader.onload = e => saveCandidate(e.target.result); reader.readAsDataURL(file); }
+    else { if(editIndex!==null) saveCandidate(candidates[editIndex].image); else showToast("Please upload an image for the candidate.", "danger"); }
+  });
+
+  window.deleteCandidate = index => { if(confirm("Are you sure you want to remove this candidate?")) { candidates.splice(index,1); localStorage.setItem("candidates",JSON.stringify(candidates)); renderCandidates(); showToast("Candidate removed successfully.","warning"); } };
+  window.editCandidate = index => { editIndex=index; const cand=candidates[index]; candPosition.value=cand.position; candName.value=cand.name; formTitle.textContent="Edit Candidate"; formBtnText.textContent="Save Changes"; cancelEditBtn.classList.remove("d-none"); };
+  cancelEditBtn.addEventListener("click", resetForm);
+  logoutBtn.addEventListener("click", () => { localStorage.removeItem("currentUser"); window.location.href="index.html"; });
+
+  function loadSchedule() {
+    const schedule = JSON.parse(localStorage.getItem("votingSchedule"));
+    if (schedule) {
+      voteStart.value=schedule.start; voteEnd.value=schedule.end;
+      currentSchedule.textContent=`Voting starts on ${new Date(schedule.start).toLocaleString()} and ends on ${new Date(schedule.end).toLocaleString()}`;
+      startCountdown(schedule);
+    }
+  }
+
+  scheduleForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const schedule = { start: voteStart.value, end: voteEnd.value };
+    if(new Date(schedule.end)<=new Date(schedule.start)){ showToast("End time must be after start time.","danger"); return; }
+    localStorage.setItem("votingSchedule", JSON.stringify(schedule)); showToast("Voting schedule saved successfully."); loadSchedule();
+  });
+
+  stopVotingBtn.addEventListener("click", () => {
+    const schedule = JSON.parse(localStorage.getItem("votingSchedule"));
+    if(!schedule){ showToast("No active voting schedule to stop.","danger"); return; }
+    schedule.end=new Date().toISOString(); localStorage.setItem("votingSchedule",JSON.stringify(schedule));
+    showToast("Voting has been stopped immediately.","warning"); loadSchedule();
+  });
+
+  extendVotingBtn.addEventListener("click", () => {
+    const schedule = JSON.parse(localStorage.getItem("votingSchedule"));
+    if(!schedule){ showToast("No active voting schedule to extend.","danger"); return; }
+    const extraMinutes=prompt("Enter number of minutes to extend voting:","30");
+    if(!extraMinutes||isNaN(extraMinutes)||extraMinutes<=0){ showToast("Invalid input. Please enter a positive number.","danger"); return; }
+    schedule.end=new Date(new Date(schedule.end).getTime()+(extraMinutes*60*1000)).toISOString();
+    localStorage.setItem("votingSchedule",JSON.stringify(schedule));
+    showToast(`Voting extended by ${extraMinutes} minutes.`,"success"); loadSchedule();
+  });
+
+  function startCountdown(schedule) {
+    clearInterval(window.countdownTimer);
+    window.countdownTimer = setInterval(() => {
+      const updatedSchedule = JSON.parse(localStorage.getItem("votingSchedule"));
+      if(updatedSchedule) schedule = updatedSchedule;
+
+      const now = new Date().getTime();
+      const start = new Date(schedule.start).getTime();
+      const end = new Date(schedule.end).getTime();
+
+      if(now<start) countdownEl.textContent="Voting starts in "+formatTime(start-now);
+      else if(now>=start && now<=end) countdownEl.textContent="Voting ends in "+formatTime(end-now);
+      else countdownEl.textContent="Voting has ended.";
+    },1000);
+  }
+
+  function formatTime(ms) {
+    const d=Math.floor(ms/(1000*60*60*24));
+    const h=Math.floor((ms%(1000*60*60*24))/(1000*60*60));
+    const m=Math.floor((ms%(1000*60*60))/(1000*60));
+    const s=Math.floor((ms%(1000*60))/1000);
+    return `${d}d ${h}h ${m}m ${s}s`;
+  }
+
+  renderCandidates();
+  loadSchedule();
+});
+</script>
+</body>
+</html>

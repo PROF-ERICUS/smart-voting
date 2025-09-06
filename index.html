@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SecureVote – Login</title>
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<style>
+  body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  .card { border-radius: 12px; padding: 2rem; }
+  body.dark-mode { background-color: #121212; color: #f1f1f1; }
+  body.dark-mode .card { background-color: #1e1e1e; color: #f1f1f1; }
+  body.dark-mode .form-control { background-color: #2c2c2c; color: #fff; border: 1px solid #444; }
+  body.dark-mode .btn { border: none; }
+  a { text-decoration: none; color: #0d6efd; }
+  a:hover { text-decoration: underline; }
+  #captchaQuestion { font-weight: bold; font-family: monospace; font-size: 1.2rem; letter-spacing: 4px; background-color: #e9ecef; padding: 6px 12px; border-radius: 6px; user-select: none; }
+  body.dark-mode #captchaQuestion { background-color: #2c2c2c; color: #fff; }
+  .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 2000; }
+</style>
+</head>
+<body>
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+  <div class="card shadow col-md-6">
+    <h2 class="mb-3 text-center"><i class="fa-solid fa-lock"></i> Login</h2>
+    <form id="loginForm">
+      <div class="mb-3">
+        <label class="form-label"><i class="fa-solid fa-id-card"></i> Index Number</label>
+        <input type="text" class="form-control" id="loginIndex" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label"><i class="fa-solid fa-shield-halved"></i> CAPTCHA</label>
+        <div class="d-flex align-items-center mb-2">
+          <span id="captchaQuestion"></span>
+          <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="refreshCaptchaBtn">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
+        </div>
+        <input type="text" class="form-control" id="captchaAnswer" placeholder="Enter CAPTCHA" required>
+      </div>
+      <div class="mb-3 d-none" id="otpSection">
+        <label class="form-label"><i class="fa-solid fa-key"></i> Enter OTP</label>
+        <input type="text" class="form-control" id="otpInput" placeholder="123456">
+        <div class="d-flex justify-content-between align-items-center mt-2">
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="resendOtpBtn">
+            <i class="fa-solid fa-paper-plane"></i> Resend OTP
+          </button>
+          <span id="otpTimer" class="text-muted small"></span>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
+    </form>
+    <p class="mt-3 text-center">Don’t have an account? <a href="register.html">Register here</a></p>
+
+    <div class="text-center mt-2">
+      <button class="btn btn-outline-secondary btn-sm" onclick="toggleDarkMode()">
+        <i class="fa-solid fa-moon"></i> Toggle Dark Mode
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toasts -->
+<div class="toast-container">
+  <div id="toast" class="toast align-items-center text-bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body" id="toastBody"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const loginForm = document.getElementById("loginForm");
+const otpSection = document.getElementById("otpSection");
+const otpInput = document.getElementById("otpInput");
+const captchaQuestion = document.getElementById("captchaQuestion");
+const resendOtpBtn = document.getElementById("resendOtpBtn");
+const refreshCaptchaBtn = document.getElementById("refreshCaptchaBtn");
+const otpTimerEl = document.getElementById("otpTimer");
+
+const toastEl = document.getElementById("toast");
+const toastBody = document.getElementById("toastBody");
+const toast = new bootstrap.Toast(toastEl);
+
+function showToast(message, type = "primary") {
+  toastEl.className = `toast align-items-center text-bg-${type} border-0`;
+  toastBody.textContent = message;
+  toast.show();
+}
+
+let captchaAns = "";
+let otpCode = "";
+let otpCountdown;
+
+function generateCaptcha() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  captchaAns = "";
+  for (let i = 0; i < 5; i++) {
+    captchaAns += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  captchaQuestion.textContent = captchaAns;
+  document.getElementById("captchaAnswer").value = "";
+}
+
+function toggleDarkMode() { document.body.classList.toggle("dark-mode"); }
+refreshCaptchaBtn.addEventListener("click", generateCaptcha);
+
+resendOtpBtn.addEventListener("click", () => {
+  if (!otpSection.classList.contains("d-none")) {
+    generateOtp();
+  } else {
+    showToast("Complete CAPTCHA first to get OTP.", "warning");
+  }
+});
+
+function generateOtp() {
+  otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  showToast("Your OTP is: " + otpCode, "info");
+  startOtpCountdown(60);
+}
+
+function startOtpCountdown(seconds) {
+  clearInterval(otpCountdown);
+  let timeLeft = seconds;
+  otpTimerEl.textContent = `OTP expires in ${timeLeft}s`;
+  otpCountdown = setInterval(() => {
+    timeLeft--;
+    otpTimerEl.textContent = `OTP expires in ${timeLeft}s`;
+    if (timeLeft <= 0) {
+      clearInterval(otpCountdown);
+      otpTimerEl.textContent = "OTP expired";
+    }
+  }, 1000);
+}
+
+window.onload = generateCaptcha;
+
+loginForm.addEventListener("submit", function(e) {
+  e.preventDefault();
+  const index = document.getElementById("loginIndex").value.trim();
+  const ans = document.getElementById("captchaAnswer").value.trim();
+
+  const users = JSON.parse(localStorage.getItem("users")) || [];
+  const user = users.find(u => u.index === index);
+
+  if (!user) {
+    showToast("User not found. Please register first.", "danger");
+    return;
+  }
+
+  if (otpSection.classList.contains("d-none")) {
+    if (ans !== captchaAns) {
+      showToast("Incorrect CAPTCHA. Try again.", "danger");
+      generateCaptcha();
+      return;
+    }
+    generateOtp();
+    otpSection.classList.remove("d-none");
+    return;
+  }
+
+  if (otpInput.value !== otpCode) {
+    showToast("Invalid OTP. Please try again.", "danger");
+    return;
+  }
+
+  showToast("Login successful!", "success");
+  localStorage.setItem("currentUser", JSON.stringify(user));
+
+  setTimeout(() => {
+    if (user.role === "Admin") {
+      window.location.href = "candidates.html";
+    } else {
+      window.location.href = "vote.html";
+    }
+  }, 1000);
+});
+</script>
+</body>
+</html>
