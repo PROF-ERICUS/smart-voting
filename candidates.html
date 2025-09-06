@@ -11,117 +11,25 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
 <style>
-  /* Professional Gradient Background */
-  body {
-    background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    min-height: 100vh;
-  }
-
-  /* Header */
-  .page-header { 
-    margin-bottom: 30px;
-    text-align: center;
-    color: #333;
-  }
-
-  .page-header h3 { font-weight: 600; }
-
-  /* Sections */
-  .form-section {
-    background: #fff;
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-    margin-bottom: 30px;
-  }
-
-  /* Buttons */
+  body { background: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  .page-header { margin-bottom: 30px; }
+  .page-header h3 { font-weight: 600; color: #333; }
+  .card { border-radius: 15px; overflow: hidden; transition: 0.3s; text-align: center; }
+  .card:hover { transform: translateY(-5px); box-shadow: 0 8px 18px rgba(0,0,0,0.15); }
+  .form-section { background: #fff; padding: 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 30px; }
   .btn-primary { background: #0069d9; border: none; }
   .btn-primary:hover { background: #0056b3; }
-  .btn-outline-primary { border-color: #0069d9; color: #0069d9; }
-  .btn-outline-primary:hover { background: #0069d9; color: #fff; }
-  .btn-outline-success { border-color: #28a745; color: #28a745; }
-  .btn-outline-success:hover { background: #28a745; color: #fff; }
-
-  /* Candidate Cards */
-  .card {
-    border-radius: 15px;
-    transition: 0.3s;
-    text-align: center;
-  }
-  .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
-  }
-  .candidate-img {
-    width: 160px;
-    height: 160px;
-    object-fit: cover;
-    border-radius: 50%;
-    margin: 20px auto 10px;
-    border: 4px solid #f0f4f8;
-  }
-
-  /* Position Headers */
-  .position-header {
-    margin-top: 40px;
-    margin-bottom: 15px;
-    font-weight: bold;
-    color: #444;
-    border-bottom: 2px solid #ddd;
-    padding-bottom: 5px;
-  }
-
-  /* Logout Button */
-  .logout-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-  }
-
-  /* Countdown */
-  #countdown {
-    font-weight: bold;
-    margin-top: 5px;
-    color: #0069d9;
-  }
-
-  /* Candidate List Scrollable */
-  #candidatesAdminList {
-    max-height: 70vh;
-    overflow-y: auto;
-    padding-right: 5px;
-  }
-
-  #candidatesAdminList::-webkit-scrollbar {
-    width: 8px;
-  }
-  #candidatesAdminList::-webkit-scrollbar-thumb {
-    background-color: rgba(0,0,0,0.2);
-    border-radius: 4px;
-  }
-
-  /* Responsive Grid Tweaks */
-  @media (max-width: 992px) { 
-    .row.g-4 > .col-sm-6, .row.g-4 > .col-md-4 { flex: 0 0 50%; max-width: 50%; }
-  }
-  @media (max-width: 576px) { 
-    .row.g-4 > .col-sm-6, .row.g-4 > .col-md-4 { flex: 0 0 100%; max-width: 100%; }
-    .candidate-img { width: 100px; height: 100px; }
-    .btn { font-size: 0.85rem; padding: 0.4rem 0.8rem; }
-  }
+  .candidate-img { width: 160px; height: 160px; object-fit: cover; border-radius: 50%; margin: 20px auto 10px; display: block; border: 4px solid #f4f6f9; }
+  .position-header { margin-top: 40px; margin-bottom: 15px; font-weight: bold; color: #444; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+  .logout-btn { position: absolute; top: 20px; right: 20px; }
+  #countdown { font-weight: bold; margin-top: 5px; color: #0069d9; }
 </style>
 </head>
 <body>
-
 <div class="container py-5 position-relative">
-  <!-- Logout -->
   <button class="btn btn-outline-danger logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
 
-  <!-- Header -->
-  <div class="page-header">
+  <div class="page-header text-center">
     <h3><i class="fas fa-users-cog me-2"></i> Candidate Management</h3>
     <p class="text-muted">Add, edit, and organize election candidates by positions</p>
   </div>
@@ -138,7 +46,7 @@
         <label class="form-label">Full Name</label>
         <input type="text" id="candName" class="form-control" placeholder="Candidate Name" required>
       </div>
-      <div class="col-12">
+      <div class="col-md-12">
         <label class="form-label">Profile Image</label>
         <input type="file" id="candImage" class="form-control" accept="image/*">
       </div>
@@ -151,7 +59,7 @@
 
   <!-- Voting Schedule -->
   <div class="form-section">
-    <h5 class="mb-3"><i class="fas fa-calendar-alt me-2"></i> Voting Schedule</h5>
+    <h5 class="mb-3"><i class="fas fa-calendar-alt me-2"></i>Voting Schedule</h5>
     <form id="scheduleForm" class="row g-3">
       <div class="col-md-6">
         <label class="form-label">Start Date & Time</label>
@@ -169,15 +77,13 @@
     </form>
     <p class="mt-3 text-muted" id="currentSchedule">No voting schedule set.</p>
     <p id="countdown"></p>
-    <div class="d-flex gap-2 mt-3 flex-wrap">
-      <a href="admin-dashboard.html" class="btn btn-outline-success"><i class="fas fa-tachometer-alt"></i> View Dashboard</a>
-      <a href="vote.html" class="btn btn-outline-success"><i class="fas fa-vote-yea"></i> View Voting</a>
-    </div>
+    <a href="admin-dashboard.html" class="btn btn-outline-success mt-3"><i class="fas fa-tachometer-alt"></i> View Dashboard</a>
+     <a href="vote.html" class="btn btn-outline-success mt-3"><i class="fas fa-tachometer-alt"></i> View voting</a>
   </div>
 
   <!-- Candidate List -->
   <div>
-    <h5 class="mb-3"><i class="fas fa-list me-2"></i> Candidate List</h5>
+    <h5 class="mb-3"><i class="fas fa-list me-2"></i>Candidate List</h5>
     <div id="candidatesAdminList"></div>
   </div>
 </div>
@@ -186,8 +92,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-const placeholderImg = "https://via.placeholder.com/160?text=No+Image";
-
 function showToast(message, type = "success") {
   const toastContainer = document.querySelector(".toast-container");
   const wrapper = document.createElement("div");
@@ -199,7 +103,8 @@ function showToast(message, type = "success") {
       </div>
     </div>`;
   toastContainer.append(wrapper);
-  new bootstrap.Toast(wrapper.querySelector(".toast")).show();
+  const toast = new bootstrap.Toast(wrapper.querySelector(".toast"));
+  toast.show();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -235,9 +140,9 @@ document.addEventListener("DOMContentLoaded", () => {
       let section = `<div class="position-header"><i class="fas fa-briefcase me-1"></i> ${pos} <span class="badge bg-secondary">${candidates.filter(c => c.position===pos).length}</span></div><div class="row g-4">`;
       candidates.filter(c => c.position===pos).forEach(cand => {
         section += `
-          <div class="col-sm-6 col-md-4">
+          <div class="col-md-4">
             <div class="card shadow-sm">
-              <img src="${cand.image||placeholderImg}" class="candidate-img" alt="${cand.name} Profile">
+              <img src="${cand.image}" class="candidate-img" alt="Profile Image">
               <div class="card-body">
                 <h5 class="card-title">${cand.name}</h5>
                 <p class="card-text text-muted mb-2">${cand.position}</p>
@@ -263,27 +168,19 @@ document.addEventListener("DOMContentLoaded", () => {
   addForm.addEventListener("submit", e => {
     e.preventDefault();
     const file = candImage.files[0];
-    if (!candPosition.value.trim() || !candName.value.trim()) { showToast("Position and Name required.", "danger"); return; }
-
-    // Only prevent duplicate names
-    if (candidates.some(c => c.name.trim().toLowerCase() === candName.value.trim().toLowerCase() && editIndex === null)) {
-      showToast("Candidate with this name already exists.", "danger"); return;
+    if (candidates.some(c => c.position.trim().toLowerCase()===candPosition.value.trim().toLowerCase() && c.name.trim().toLowerCase()===candName.value.trim().toLowerCase() && editIndex===null)) {
+      showToast("Candidate already exists for this position.", "danger");
+      return;
     }
-
     function saveCandidate(imgSrc) {
-      const candidateData = {
-        position: candPosition.value.trim(),
-        name: candName.value.trim(),
-        image: imgSrc || placeholderImg
-      };
-      if (editIndex !== null) { candidates[editIndex] = candidateData; showToast("Candidate updated successfully."); }
+      const candidateData = { position: candPosition.value.trim(), name: candName.value.trim(), image: imgSrc };
+      if (editIndex!==null) { candidates[editIndex]=candidateData; showToast("Candidate updated successfully."); }
       else { candidates.push(candidateData); showToast("Candidate added successfully."); }
       localStorage.setItem("candidates", JSON.stringify(candidates));
       renderCandidates(); resetForm();
     }
-
-    if (file) { const reader = new FileReader(); reader.onload = e => saveCandidate(e.target.result); reader.readAsDataURL(file); }
-    else saveCandidate(editIndex !== null ? candidates[editIndex].image : placeholderImg);
+    if (file) { const reader=new FileReader(); reader.onload = e => saveCandidate(e.target.result); reader.readAsDataURL(file); }
+    else { if(editIndex!==null) saveCandidate(candidates[editIndex].image); else showToast("Please upload an image for the candidate.", "danger"); }
   });
 
   window.deleteCandidate = index => { if(confirm("Are you sure you want to remove this candidate?")) { candidates.splice(index,1); localStorage.setItem("candidates",JSON.stringify(candidates)); renderCandidates(); showToast("Candidate removed successfully.","warning"); } };
@@ -329,9 +226,11 @@ document.addEventListener("DOMContentLoaded", () => {
     window.countdownTimer = setInterval(() => {
       const updatedSchedule = JSON.parse(localStorage.getItem("votingSchedule"));
       if(updatedSchedule) schedule = updatedSchedule;
+
       const now = new Date().getTime();
       const start = new Date(schedule.start).getTime();
       const end = new Date(schedule.end).getTime();
+
       if(now<start) countdownEl.textContent="Voting starts in "+formatTime(start-now);
       else if(now>=start && now<=end) countdownEl.textContent="Voting ends in "+formatTime(end-now);
       else countdownEl.textContent="Voting has ended.";
@@ -343,7 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const h=Math.floor((ms%(1000*60*60*24))/(1000*60*60));
     const m=Math.floor((ms%(1000*60*60))/(1000*60));
     const s=Math.floor((ms%(1000*60))/1000);
-    return `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+    return `${d}d ${h}h ${m}m ${s}s`;
   }
 
   renderCandidates();
