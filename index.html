@@ -89,10 +89,11 @@ const toastEl = document.getElementById("toast");
 const toastBody = document.getElementById("toastBody");
 const toast = new bootstrap.Toast(toastEl);
 
-function showToast(message, type = "primary") {
+function showToast(message, type = "primary", delay = 30000) {
   toastEl.className = `toast align-items-center text-bg-${type} border-0`;
   toastBody.textContent = message;
-  toast.show();
+  const tempToast = new bootstrap.Toast(toastEl, { delay: delay, autohide: true });
+  tempToast.show();
 }
 
 let captchaAns = "";
@@ -121,8 +122,13 @@ resendOtpBtn.addEventListener("click", () => {
 });
 
 function generateOtp() {
+  // Generate 6-digit OTP
   otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-  showToast("Your OTP is: " + otpCode, "info");
+
+  // Show OTP toast for 30 seconds
+  showToast("Your OTP is: " + otpCode, "info", 30000);
+
+  // Start 60-second OTP validity countdown
   startOtpCountdown(60);
 }
 
@@ -130,12 +136,16 @@ function startOtpCountdown(seconds) {
   clearInterval(otpCountdown);
   let timeLeft = seconds;
   otpTimerEl.textContent = `OTP expires in ${timeLeft}s`;
+
   otpCountdown = setInterval(() => {
     timeLeft--;
     otpTimerEl.textContent = `OTP expires in ${timeLeft}s`;
+
     if (timeLeft <= 0) {
       clearInterval(otpCountdown);
+      otpCode = ""; // Invalidate OTP
       otpTimerEl.textContent = "OTP expired";
+      showToast("OTP has expired. Please generate a new one.", "danger");
     }
   }, 1000);
 }
