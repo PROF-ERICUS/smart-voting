@@ -87,6 +87,35 @@
     margin-top: 5px;
     color: #0069d9;
   }
+  /* Candidate List Scrollable & Responsive */
+#candidatesAdminList {
+  max-height: 70vh;        /* limits height so page scroll remains usable */
+  overflow-y: auto;         /* vertical scroll if many candidates */
+  padding-right: 5px;
+}
+
+/* Scrollbar Styling */
+#candidatesAdminList::-webkit-scrollbar {
+  width: 8px;
+}
+#candidatesAdminList::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.2);
+  border-radius: 4px;
+}
+#candidatesAdminList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Responsive Grid Tweaks */
+@media (max-width: 992px) { /* tablets */
+  .row.g-4 > .col-md-4 { flex: 0 0 50%; max-width: 50%; }
+}
+
+@media (max-width: 576px) { /* mobile */
+  .row.g-4 > .col-md-4 { flex: 0 0 100%; max-width: 100%; }
+  .candidate-img { width: 100px; height: 100px; }
+}
+
 
   /* Responsive tweaks */
   @media (max-width: 768px) {
@@ -334,3 +363,4 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 </body>
 </html>
+
