@@ -17,6 +17,7 @@
     min-height: 100vh;
     color: #fff;
   }
+
   .page-header { margin-bottom: 30px; text-align: center; }
   .page-header h3 { font-weight: 600; }
   .page-header p { color: #e0e0e0; }
@@ -35,24 +36,51 @@
   .btn-outline-primary { border-color: #4b6cb7; color: #4b6cb7; }
   .btn-outline-primary:hover { background: #4b6cb7; color: #fff; }
 
-  .card { border-radius: 15px; transition: 0.3s; text-align: center; overflow: hidden; background: #fff; color: #333; }
+  .card {
+    border-radius: 15px;
+    transition: 0.3s;
+    text-align: center;
+    overflow: hidden;
+    background: #fff;
+    color: #333;
+  }
   .card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0,0,0,0.2); }
 
-  .candidate-img { width: 160px; height: 160px; object-fit: cover; border-radius: 50%; margin: 20px auto 10px; border: 4px solid #f4f6f9; display: block; }
+  .candidate-img {
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin: 20px auto 10px;
+    border: 4px solid #f4f6f9;
+    display: block;
+  }
 
-  .position-header { margin-top: 40px; margin-bottom: 15px; font-weight: bold; color: #fff; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 5px; }
+  .position-header {
+    margin-top: 40px;
+    margin-bottom: 15px;
+    font-weight: bold;
+    color: #fff;
+    border-bottom: 2px solid rgba(255,255,255,0.3);
+    padding-bottom: 5px;
+  }
 
   .logout-btn { position: absolute; top: 20px; right: 20px; z-index: 1000; }
 
   #countdown { font-weight: bold; margin-top: 5px; color: #ffd700; }
+
   #candidatesAdminList { max-height: 70vh; overflow-y: auto; padding-right: 5px; }
+
   #candidatesAdminList::-webkit-scrollbar { width: 8px; }
   #candidatesAdminList::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.2); border-radius: 4px; }
   #candidatesAdminList::-webkit-scrollbar-track { background: transparent; }
 
-  @media (max-width: 992px) { .row.g-4 > .col-md-4 { flex: 0 0 50%; max-width: 50%; } }
-  @media (max-width: 576px) { 
-    .row.g-4 > .col-md-4 { flex: 0 0 100%; max-width: 100%; } 
+  @media (max-width: 992px) {
+    .row.g-4 > .col-md-4 { flex: 0 0 50%; max-width: 50%; }
+  }
+
+  @media (max-width: 576px) {
+    .row.g-4 > .col-md-4 { flex: 0 0 100%; max-width: 100%; }
     .candidate-img { width: 120px; height: 120px; }
     .btn { font-size: 0.85rem; padding: 0.4rem 0.8rem; }
     .form-section input, .form-section button { width: 100%; }
@@ -84,9 +112,9 @@
       </div>
       <div class="col-12">
         <label class="form-label">Profile Image</label>
+        <!-- Updated input for mobile camera/photo selection -->
         <input type="file" id="candImage" class="form-control" accept="image/*" capture="environment">
         <small class="text-muted">Take a new photo or choose one from your device.</small>
-        <img id="imagePreview" src="" alt="Image Preview" class="d-none" style="width:120px; height:120px; object-fit:cover; border-radius:50%; margin:10px auto; border:2px solid #4b6cb7;">
       </div>
       <div class="col-12 text-end">
         <button type="submit" class="btn btn-primary mb-2"><i class="fas fa-plus"></i> <span id="formBtnText">Add Candidate</span></button>
@@ -162,29 +190,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const countdownEl = document.getElementById("countdown");
   const stopVotingBtn = document.getElementById("stopVotingBtn");
   const extendVotingBtn = document.getElementById("extendVotingBtn");
-  const imagePreview = document.getElementById("imagePreview");
 
   const currentUser = JSON.parse(localStorage.getItem("currentUser"));
   if(!currentUser || currentUser.role !== "Admin") window.location.href="index.html";
 
   let candidates = JSON.parse(localStorage.getItem("candidates")) || [];
   let editIndex = null;
-
-  // Show image preview when selected
-  candImage.addEventListener("change", () => {
-    const file = candImage.files[0];
-    if(file){
-      const reader = new FileReader();
-      reader.onload = e => {
-        imagePreview.src = e.target.result;
-        imagePreview.classList.remove("d-none");
-      };
-      reader.readAsDataURL(file);
-    } else {
-      imagePreview.src = "";
-      imagePreview.classList.add("d-none");
-    }
-  });
 
   function renderCandidates() {
     list.innerHTML = "";
@@ -217,8 +228,6 @@ document.addEventListener("DOMContentLoaded", () => {
     formTitle.textContent = "Add New Candidate";
     formBtnText.textContent = "Add Candidate";
     cancelEditBtn.classList.add("d-none");
-    imagePreview.src = "";
-    imagePreview.classList.add("d-none");
   }
 
   addForm.addEventListener("submit", e=>{
@@ -241,24 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   window.deleteCandidate = index=>{ if(confirm("Are you sure you want to remove this candidate?")) { candidates.splice(index,1); localStorage.setItem("candidates",JSON.stringify(candidates)); renderCandidates(); showToast("Candidate removed successfully.","warning"); } };
-  
-  window.editCandidate = index=>{
-    editIndex=index;
-    const cand=candidates[index];
-    candPosition.value=cand.position;
-    candName.value=cand.name;
-    formTitle.textContent="Edit Candidate";
-    formBtnText.textContent="Save Changes";
-    cancelEditBtn.classList.remove("d-none");
-    if(cand.image){
-      imagePreview.src = cand.image;
-      imagePreview.classList.remove("d-none");
-    } else {
-      imagePreview.src = "";
-      imagePreview.classList.add("d-none");
-    }
-  };
-
+  window.editCandidate = index=>{ editIndex=index; const cand=candidates[index]; candPosition.value=cand.position; candName.value=cand.name; formTitle.textContent="Edit Candidate"; formBtnText.textContent="Save Changes"; cancelEditBtn.classList.remove("d-none"); };
   cancelEditBtn.addEventListener("click", resetForm);
   logoutBtn.addEventListener("click", ()=>{ localStorage.removeItem("currentUser"); window.location.href="index.html"; });
 
