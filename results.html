@@ -11,10 +11,29 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
 <style>
-  body { background: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-  .page-header { margin-bottom: 25px; }
-  .card { border-radius: 15px; transition: 0.3s; }
-  .card:hover { transform: translateY(-5px); box-shadow: 0 8px 18px rgba(0,0,0,0.15); }
+  body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    color: #fff;
+  }
+
+  .page-header { margin-bottom: 25px; text-align: center; }
+  .page-header h3 { font-weight: 600; }
+  .page-header p { color: #e0e0e0; }
+
+  .card {
+    border-radius: 15px;
+    transition: 0.3s;
+    background: #fff;
+    color: #333;
+    overflow: hidden;
+    text-align: center;
+    padding: 20px 10px;
+    position: relative;
+  }
+  .card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0,0,0,0.2); }
+
   .candidate-img {
     width: 150px;
     height: 150px;
@@ -22,15 +41,36 @@
     border-radius: 50%;
     margin: 15px auto 10px auto;
     display: block;
-    border: 4px solid #f1f1f1;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border: 4px solid #f4f6f9;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   }
-  #countdown { font-weight: bold; color: #d9534f; margin-bottom: 15px; }
+
+  .winner-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: gold;
+    color: #333;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  #countdown {
+    font-weight: bold;
+    color: #ffd700;
+    margin-bottom: 15px;
+  }
+
+  @media (max-width: 992px) { .col-md-4 { flex: 0 0 50%; max-width: 50%; } }
+  @media (max-width: 576px) { .col-md-4 { flex: 0 0 100%; max-width: 100%; } .candidate-img { width: 120px; height: 120px; } }
 </style>
 </head>
 <body>
 <div class="container py-5">
-  <div class="page-header text-center">
+  <div class="page-header">
     <h3><i class="fas fa-chart-bar me-2"></i> Election Results</h3>
     <p id="countdown"></p>
   </div>
@@ -38,7 +78,7 @@
   <div id="resultsContent" class="row g-4"></div>
 
   <div class="d-flex justify-content-center mt-4">
-    <a href="vote.html" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Back to Vote</a>
+    <a href="vote.html" class="btn btn-outline-light"><i class="fas fa-arrow-left"></i> Back to Vote</a>
   </div>
 </div>
 
@@ -74,14 +114,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
 
-      let html = `<div class="col-12"><h5 class="mt-3"><i class="fas fa-briefcase me-1"></i>${pos}</h5><div class="row g-3">`;
+      // Determine winner(s)
+      const maxVotes = Math.max(...Object.values(voteCounts));
+      const winners = Object.keys(voteCounts).filter(name => voteCounts[name] === maxVotes && maxVotes > 0);
+
+      let html = `<div class="col-12"><h5 class="mt-3 text-white"><i class="fas fa-briefcase me-1"></i>${pos}</h5><div class="row g-3">`;
 
       group.forEach(cand => {
         const imgSrc = cand.image || placeholderImg;
         const count = voteCounts[cand.name] || 0;
         html += `
           <div class="col-md-4">
-            <div class="card shadow-sm text-center p-3">
+            <div class="card shadow-sm">
+              ${winners.includes(cand.name) ? '<div class="winner-badge"><i class="fas fa-trophy"></i> Winner</div>' : ''}
               <img src="${imgSrc}" class="candidate-img" alt="Profile">
               <h5 class="card-title">${cand.name}</h5>
               <p class="text-muted mb-1">Votes: <b>${count}</b></p>
@@ -122,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   updateResults();
-  setInterval(updateResults, 1000); // refresh every second
+  setInterval(updateResults, 1000);
 });
 </script>
 </body>
